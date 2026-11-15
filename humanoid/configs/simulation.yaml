@@ -1,0 +1,69 @@
+# Unitree G1 cube sorting: red cube to the red pad (robot's left), blue cube to the blue pad (right).
+# Coordinates are in the env frame: robot pelvis at the origin, facing +y; robot's left is -x.
+
+versions:
+  isaaclab: "3.0.0"
+  isaacsim: "6.2"
+
+task:
+  base_id: IsaacContrib-PickPlace-FixedBaseUpperBodyIK-G1-Abs
+  device: cuda:0
+  episode_length_s: 20.0
+  action_dim: 28              # left wrist pose 7 + right wrist pose 7 + 14 Dex3 hand joints
+
+seed: 0
+physx_gpu:
+  gpu_max_rigid_contact_count: 524288
+  gpu_max_rigid_patch_count: 81920
+  gpu_found_lost_aggregate_pairs_capacity: 4194304
+  gpu_total_aggregate_pairs_capacity: 262144
+
+scene:
+  table_pos: [0.40, 0.55, -0.194]  # top at 0.80, below the arms at rest. Cubes sit on a raised platform.
+  table_height: 0.860         # platform top, where the cubes rest
+  cube_size: 0.05
+  cube_mass: 0.05
+  pad_size: 0.12
+  spawn_jitter: 0.015         # uniform +- in x and y on every reset
+  red_spawn: [-0.20, 0.38, 0.94]
+  blue_spawn: [0.20, 0.38, 0.94]
+  red_goal: [-0.28, 0.38, 0.863]
+  blue_goal: [0.28, 0.38, 0.863]
+
+scripted:
+  reach_tolerance: 0.012      # m, wrist position error to finish a move
+  above_height: 0.04          # m above the push pose
+  lift_height: 0.10           # m
+  max_step: 0.004             # m per control step for the commanded wrist position (0.2 m/s)
+
+collection:
+  num_episodes: 60
+  max_attempts: 120
+  settle_steps: 15
+  output_hdf5: humanoid/data/raw/g1_sort_scripted_demos.hdf5
+
+cameras:
+  resolution: 128
+  # chest and wrist poses are in the parent link frame (torso / wrist yaw link: +x forward)
+  chest_cam:
+    pos: [0.08, 0.0, 0.30]
+    look_at: [0.40, 0.0, -0.10]
+    focal_length: 14.0
+  # wrist yaw link frame: +x toward the fingertips, palm side is -y (left) / +y (right)
+  left_wrist_cam:
+    pos: [0.0, 0.07, 0.0]
+    look_at: [0.16, -0.05, 0.0]
+    up: [0.0, 1.0, 0.0]
+    focal_length: 11.0
+  right_wrist_cam:
+    pos: [0.0, -0.07, 0.0]
+    look_at: [0.16, 0.05, 0.0]
+    up: [0.0, -1.0, 0.0]
+    focal_length: 11.0
+  # screenshots only (env frame)
+  showcase_cam:
+    pos: [0.95, 1.25, 1.35]
+    look_at: [0.0, 0.30, 0.78]
+    focal_length: 18.0
+    width: 960
+    height: 640

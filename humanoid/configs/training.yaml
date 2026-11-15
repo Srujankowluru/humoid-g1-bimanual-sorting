@@ -1,0 +1,66 @@
+# ACT training for the Unitree G1 sorting task. Read by the shared repository scripts:
+#     python dataset/process_dataset.py --config humanoid/configs/training.yaml --profile g1_sort_vision
+#     python policy/train.py           --config humanoid/configs/training.yaml --profile g1_sort_vision
+# Paths are relative to the repository root.
+
+profile: g1_sort_vision
+
+profiles:
+  # What a real G1 has: its own joints and hand pose, plus the chest and both wrist cameras.
+  # No cube coordinates: the policy has to find the red and blue cubes in the images.
+  g1_sort_vision:
+    raw_hdf5: humanoid/data/raw/g1_sort_scripted_demos.hdf5
+    root: humanoid/data/lerobot/g1_sort_vision
+    repo_id: local/g1_sort_vision
+    fps: 50
+    task: "Put the red cube on the left pad and the blue cube on the right pad."
+    state_keys: [arm_joint_pos, hand_joint_pos, left_eef_pos, left_eef_quat, right_eef_pos, right_eef_quat]
+    env_state_keys: []
+    image_keys: [chest_cam, left_wrist_cam, right_wrist_cam]
+
+  # PRIVILEGED baseline: true cube positions from the simulator, no cameras. Not available on a real robot.
+  g1_sort_privileged_state:
+    raw_hdf5: humanoid/data/raw/g1_sort_scripted_demos.hdf5
+    root: humanoid/data/lerobot/g1_sort_privileged_state
+    repo_id: local/g1_sort_privileged_state
+    fps: 50
+    task: "Put the red cube on the left pad and the blue cube on the right pad."
+    state_keys: [arm_joint_pos, hand_joint_pos, left_eef_pos, left_eef_quat, right_eef_pos, right_eef_quat]
+    env_state_keys: [red_cube_pos, blue_cube_pos]
+    image_keys: []
+
+split:
+  val_fraction: 0.15
+  seed: 0
+
+policy:
+  chunk_size: 25
+  n_action_steps: 25
+  dim_model: 256
+  n_heads: 8
+  dim_feedforward: 1024
+  n_encoder_layers: 4
+  n_decoder_layers: 1
+  n_vae_encoder_layers: 4
+  latent_dim: 32
+  use_vae: true
+  kl_weight: 10.0
+  dropout: 0.1
+  vision_backbone: resnet18
+  pretrained_backbone_weights: null
+  optimizer_lr: 1.0e-4
+  optimizer_lr_backbone: 1.0e-5
+  optimizer_weight_decay: 1.0e-4
+
+train:
+  steps: 6000
+  batch_size: 32
+  num_workers: 4
+  eval_every: 500
+  save_every: 3000
+  grad_clip_norm: 10.0
+  seed: 0
+  device: auto
+  output_dir: humanoid/outputs/checkpoints
+  metrics_dir: humanoid/outputs/metrics
+  figures_dir: humanoid/outputs/figures
